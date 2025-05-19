@@ -9,7 +9,7 @@ include_directories(
     /usr/include/eigen3
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-
+set(CMAKE_BUILD_TYPE Debug)
 
 add_executable(sim
     src/main.cpp
