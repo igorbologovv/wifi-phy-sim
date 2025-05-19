@@ -10,23 +10,21 @@ static const std::map<std::string, std::complex<double>> qam_map = {
     {"10", { 1.0, -1.0}}
 };
 
-static const std::vector<std::string> bit_order = {"00", "01", "11", "10"};
-
 std::complex<double> qam_encode(const std::string& bits) {
     return qam_map.at(bits);
 }
 
 std::string qam_decode(const std::complex<double>& sym) {
     double min_dist = 1e9;
-    std::string best;
-    for (const auto& [bits, ref] : qam_map) {
-        double dist = std::norm(sym - ref);
+    std::string closest;
+    for (const auto& [bits, point] : qam_map) {
+        double dist = std::norm(sym - point);
         if (dist < min_dist) {
             min_dist = dist;
-            best = bits;
+            closest = bits;
         }
     }
-    return best;
+    return closest;
 }
 
 std::complex<double> add_awgn(const std::complex<double>& sym, double snr_db) {
