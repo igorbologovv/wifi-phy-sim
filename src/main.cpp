@@ -1,35 +1,41 @@
 #include <iostream>
 #include <iomanip>
-#include "phy.h"
-#include "mcs.h"
+#include <vector>
+#include <complex>
+#include "qam.h"
+#include "ofdm.h"
 
-int main()
-{
-    std::string input = "PING";
-    double snr_db     = 4.0;               
+int main(){
+    const size_t N = 64;          // number of subcarriers (small value for clarity)
+    double snr_db = 10.0;        // SNR in the channel
 
-    /* 1 — choose apropriate MCS */
-    const MCS& mcs = choose_mcs(snr_db);
+    /* ── 1. Create QPSK points for each subcarrier ───────────── */
+    std::vector<std::complex<double>> freq(N);
+    std::vector<std::string> bits = {"00","01","11","10","00","01","11","10"};
+    for(size_t i=0;i<N;++i)
+        freq[i] = modulate(bits[i], Mod::QPSK);
 
-    /* 2 — create MPDU and transfer» */
-    MPDU tx  = create_mpdu(input);
-    auto wf  = transmit(tx, snr_db, mcs);
+    std::cout << " Frequency domain (subcarriers):\n";
+    for(auto& s:freq) std::cout<<s<<" "; std::cout<<"\n";
 
-    /* 3 — recieve */
-    MPDU rx  = receive(wf, mcs);
+    /* ── 2. IFFT -> time-domain signal ────────────────────────── */
+    auto time = ifft(freq);
+    std::cout << "\n Time-domain signal after IFFT:\n";
+    for(auto& s:time) std::cout<<s<<" "; std::cout<<"\n";
 
-    /* 4 — count errors*/
-    int err = 0;
-    for (size_t i=0; i<tx.payload_bits.size(); ++i)
-        if (tx.payload_bits[i] != rx.payload_bits[i]) ++err;
+    /* ── 3. Add AWGN ─────────────────────────────────────────── */
+    add_awgn(time, snr_db);
 
-    double ber = double(err) / tx.payload_bits.size();
+    /* ── 4. FFT -> recover frequency domain ───────────────────── */
+    auto recv_freq = fft(time);
+    std::cout << "\n Recovered subcarriers after FFT:\n";
+    for(auto& s:recv_freq) std::cout<<s<<" "; std::cout<<"\n";
 
-    std::cout << "SNR " << snr_db << " dB  →  MCS" << mcs.index
-              << "  (" << bits_per_symbol(mcs.mod) << " bit/sim, R="
-              << mcs.code_rate << ")\n"
-              << "Decoded: " << bits_to_text(rx.payload_bits) << "\n"
-              << "Errors: " << err << "/" << tx.payload_bits.size()
-              << "   BER = " << std::scientific << ber << "\n";
-    return 0;
+    /* ── 5. Demodulation and BER ─────────────────────────────── */
+    int errs=0;
+    for(size_t i=0;i<N;++i){
+        std::string dec = demodulate(recv_freq[i], Mod::QPSK);
+        if(dec!=bits[i]) ++errs;
+    }
+    std::cout << "\nErroneous subcarriers: "<<errs<<" / "<<N<<"\n";
 }

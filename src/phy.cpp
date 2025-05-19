@@ -3,6 +3,11 @@
 #include <bitset>
 
 /* Simple «code-repeat x2» for R=1/2 */
+// ====START SECTION====
+// These two functions simulate Forward Error Correction (FEC) coding:
+// `repeat2` emulates R = 1/2 by duplicating each bit.
+// `derpt2` recovers by taking one bit from each pair (no majority voting).
+
 static std::string repeat2(const std::string& b)
 {
     std::string out;
@@ -19,7 +24,7 @@ static std::string derpt2(const std::string& b)   /* majority vote skip */
     for (size_t i=0;i<b.size(); i+=2) out.push_back(b[i]);
     return out;
 }
-
+//========END SECTION====
 
 
 /// ===START section ===  This part is for coding and decoding text// util functions
