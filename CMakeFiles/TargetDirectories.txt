@@ -1,3 +1,0 @@
-/home/igogo/wifi-phy-sim/CMakeFiles/sim.dir
-/home/igogo/wifi-phy-sim/CMakeFiles/edit_cache.dir
-/home/igogo/wifi-phy-sim/CMakeFiles/rebuild_cache.dir
