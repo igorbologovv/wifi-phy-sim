@@ -1,13 +1,10 @@
 #pragma once
 #include <complex>
 #include <string>
+#include "mcs.h"
 
-// Map 2-bit string to QAM symbol (QPSK)
-std::complex<double> qam_encode(const std::string& bits);
 
-// Decode noisy symbol to nearest constellation point
-std::string qam_decode(const std::complex<double>& symbol);
+std::complex<double> modulate  (const std::string& bits, Mod m);
+std::string          demodulate(const std::complex<double>& sym, Mod m);
 
-// Add AWGN noise to a symbol (SNR in dB)
-std::complex<double> add_awgn(const std::complex<double>& sym, double snr_db);
-
+std::complex<double> add_awgn(const std::complex<double>& s, double snr_db);

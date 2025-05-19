@@ -1,28 +1,35 @@
 #include <iostream>
+#include <iomanip>
 #include "phy.h"
+#include "mcs.h"
 
-int main() {
+int main()
+{
     std::string input = "PING";
-    double snr = 10.0;
+    double snr_db     = 4.0;               
 
-    // Step 1: Sender creates MPDU
-    MPDU tx = create_mpdu(input);
+    /* 1 — choose apropriate MCS */
+    const MCS& mcs = choose_mcs(snr_db);
 
-    // Step 2: Transmit MPDU through noisy channel
-    auto waveform = transmit(tx, snr);
+    /* 2 — create MPDU and transfer» */
+    MPDU tx  = create_mpdu(input);
+    auto wf  = transmit(tx, snr_db, mcs);
 
-    // Step 3: Receiver tries to recover MPDU
-    MPDU rx = receive(waveform);
+    /* 3 — recieve */
+    MPDU rx  = receive(wf, mcs);
 
-    // Step 4: Evaluate bit error rate
-    int errors = 0;
-    for (size_t i = 0; i < tx.payload_bits.size(); ++i) {
-        if (tx.payload_bits[i] != rx.payload_bits[i]) errors++;
-    }
+    /* 4 — count errors*/
+    int err = 0;
+    for (size_t i=0; i<tx.payload_bits.size(); ++i)
+        if (tx.payload_bits[i] != rx.payload_bits[i]) ++err;
 
-    std::cout << "Decoded text: " << bits_to_text(rx.payload_bits) << "\n";
-    std::cout << "Bit errors: " << errors << "/" << tx.payload_bits.size()
-              << " (BER = " << static_cast<double>(errors) / tx.payload_bits.size() << ")\n";
+    double ber = double(err) / tx.payload_bits.size();
 
+    std::cout << "SNR " << snr_db << " dB  →  MCS" << mcs.index
+              << "  (" << bits_per_symbol(mcs.mod) << " bit/sim, R="
+              << mcs.code_rate << ")\n"
+              << "Decoded: " << bits_to_text(rx.payload_bits) << "\n"
+              << "Errors: " << err << "/" << tx.payload_bits.size()
+              << "   BER = " << std::scientific << ber << "\n";
     return 0;
 }
